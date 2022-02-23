@@ -15,7 +15,7 @@ import {SearchHelp} from './help';
 import 'react-date-range/dist/styles.css'; // main style file
 import 'react-date-range/dist/theme/default.css'; // theme css file
 
-const isDevMode = true;
+const isDevMode = (location.hostname !== "churningsearch.ca");
 
 ReactGA.initialize('UA-171174933-1', {
     titleCase: false,
@@ -404,7 +404,7 @@ export class App extends React.Component<{}, AppState> {
                 <p>Maintained by <a href={`https://${this.state.old ? 'old' : 'www'}.reddit.com/user/aaaidil/`}
                                     className={linkClass + " no-underline hover:underline"}
                                     target="_blank"
-                                    onClick={(e) => this.handleOutboundClick(e)}>aaaidil</a>(Violet#3417 on Discord)</p>
+                                    onClick={(e) => this.handleOutboundClick(e)}>aaaidil</a> (Violet#3417 on Discord)</p>
             </>;
 
         if (this.state.comments) {
