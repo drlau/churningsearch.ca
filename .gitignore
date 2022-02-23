@@ -1,0 +1,7 @@
+dist/
+node_modules/
+.parcel-cache/
+.cache/
+.env
+yarn-error.log
+*.iml
