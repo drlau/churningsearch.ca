@@ -17,7 +17,7 @@ import 'react-date-range/dist/theme/default.css'; // theme css file
 
 const isDevMode = (location.hostname !== "churningsearch.ca");
 
-ReactGA.initialize('UA-171174933-1', {
+ReactGA.initialize('G-KF1G1FVW6N', {
     titleCase: false,
     debug: isDevMode,
     testMode: isDevMode
