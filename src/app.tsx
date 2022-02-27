@@ -98,7 +98,7 @@ export class App extends React.Component<{}, AppState> {
         }
 
         // Load stored form data if exists
-        let localStorageData = utils.decompress(localStorage.getItem("churning-search"));
+        let localStorageData = utils.decompress(localStorage.getItem("churning-canada-search"));
         if (!isEmpty(localStorageData)) {
             this.loadSavedState(localStorageData);
             console.log("Loaded state from local storage");
