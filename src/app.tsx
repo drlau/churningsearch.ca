@@ -2,22 +2,23 @@ import * as React from 'react';
 import ta from 'time-ago';
 import ReactMarkdown from 'react-markdown';
 import gfm from 'remark-gfm';
-import {subDays, addDays, format} from 'date-fns';
+import {subDays, format} from 'date-fns';
 import ReactGA from 'react-ga';
 import LZString from "lz-string";
 import {isEmpty} from "underscore";
 import {DateRange} from 'react-date-range';
 import toast from 'react-hot-toast';
 
-import {PushshiftAPI, SearchSettings, SearchRange} from './api';
+import {PushshiftAPI, SearchSettings} from './api';
 import {SearchHelp} from './help';
+import {Constants, SearchRange} from "./constants";
 
 import 'react-date-range/dist/styles.css'; // main style file
 import 'react-date-range/dist/theme/default.css'; // theme css file
 
-const isDevMode = (location.hostname !== "churningsearch.ca");
+const isDevMode = (location.hostname !== Constants.host);
 
-ReactGA.initialize('UA-221369952-1', {
+ReactGA.initialize(Constants.analyticsProfile, {
     titleCase: false,
     debug: isDevMode,
     testMode: isDevMode
@@ -98,7 +99,7 @@ export class App extends React.Component<{}, AppState> {
         }
 
         // Load stored form data if exists
-        let localStorageData = utils.decompress(localStorage.getItem("churning-canada-search"));
+        let localStorageData = utils.decompress(localStorage.getItem(Constants.id));
         if (!isEmpty(localStorageData)) {
             this.loadSavedState(localStorageData);
             console.log("Loaded state from local storage");
@@ -116,7 +117,7 @@ export class App extends React.Component<{}, AppState> {
             old: this.state.old,
             showDate: this.state.showDate
         };
-        localStorage.setItem("churning-canada-search", utils.compress(toSave));
+        localStorage.setItem(Constants.id, utils.compress(toSave));
     }
 
     setError = (error: string) => {
@@ -127,7 +128,7 @@ export class App extends React.Component<{}, AppState> {
                 fatal: false
             })
         } else {
-            console.error("PushshiftAPI Error", "\n", error);
+            console.error(`Pushshift API Error: ${error}`);
         }
     }
 
@@ -249,20 +250,33 @@ export class App extends React.Component<{}, AppState> {
         this.setState({threadType: {}, error: null, comments: null, searching: true});
         this.lastSearch = {...this.state};
         let threadOptions = {};
-        let data1 = [], data2 = [];
+        let dataResults = [], dataProd = [];
 
-        let url1 = this.api.get_url(this.lastSearch, false);
+        let urlProd = this.api.get_url(this.lastSearch, false);
 
         try {
-            data1 = await this.api.query(url1);
+            dataProd = await this.api.query(urlProd);
         } catch (error) {
-            this.setError(`Prod: ${String(error)}`);
+            this.setError(`${error} (Prod)`);
         }
 
-        let data = Object.values(data1.concat(data2).reduce((r, o) => {
-            r[o.id] = o;
-            return r;
-        }, {})).sort((a, b) => {
+        if (Constants.useBeta) {
+            let dataBeta = [];
+            let urlBeta = this.api.get_url(this.lastSearch, true);
+            try {
+                dataBeta = await this.api.query(urlBeta);
+            } catch (error) {
+                this.setError(`${error} (Beta)`);
+            }
+
+            dataResults = Object.values(dataProd.concat(dataBeta).reduce((r, o) => {
+                r[o.id] = o;
+                return r;
+            }, {}))
+        } else {
+            dataResults = dataProd;
+        }
+        let data = dataResults.sort((a, b) => {
             if (this.state.sort === "asc") {
                 return a.created_utc - b.created_utc;
             } else {
@@ -562,14 +576,20 @@ export class App extends React.Component<{}, AppState> {
                         </div>
                         {this.state.error &&
                             <div
-                                className="flex items-start bg-red-100 border border-red-400 text-red-700 p-4 mb-4 rounded"
+                                className="bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100 border border-red-400 divide-y divide-red-400 p-4 mb-4 rounded"
                                 role="alert">
-                                <svg className="w-6 h-6 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                     viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <div className="font-bold">Error: {this.state.error}</div>
+                                <div className="flex items-start pb-4">
+                                    <svg className="w-6 h-6 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                         viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <div className="font-bold">Error: {this.state.error}</div>
+                                </div>
+                                <div className="pt-4 text-sm">
+                                    If <a href="https://redditsearch.io" target="_blank" className="underline">Reddit Search</a> is not working/available,
+                                    then {Constants.name} will not be working. Try again later.
+                                </div>
                             </div>
                         }
                         <div className="text-center text-xs py-4">
@@ -598,9 +618,9 @@ export class App extends React.Component<{}, AppState> {
                                 </div>
                             }
                             <div className="text-center py-4">
-                                Search <a href={`https://${this.state.old ? 'old' : 'www'}.reddit.com/r/churningcanada`}
+                                Search <a href={`https://${this.state.old ? 'old' : 'www'}.reddit.com/r/${Constants.subreddit}`}
                                           className={linkClass}
-                                          onClick={(e) => this.handleOutboundClick(e)}>r/churningcanada</a> using
+                                          onClick={(e) => this.handleOutboundClick(e)}>r/{Constants.subreddit}</a> using
                                 the <a href="https://pushshift.io/" className={linkClass}
                                        onClick={(e) => this.handleOutboundClick(e)}>pushshift.io API</a>, the same
                                 source
@@ -624,8 +644,7 @@ export class App extends React.Component<{}, AppState> {
                     className="md:w-2/6 xl:w-1/4 p-4 bg-blue-200 dark:bg-gray-900 shadow-lg overflow-y-auto md:flex md:flex-col">
                     <div>
                         <form onSubmit={this.searchSubmit}>
-                            <h1 className="text-2xl text-gray-700 dark:text-gray-300 font-mono tracking-tighter">Churning Canada
-                                Search</h1>
+                            <h1 className="text-2xl text-gray-700 dark:text-gray-300 font-mono tracking-tighter">{Constants.name}</h1>
                             {/* Search Query */}
                             <div className="mt-2">
                                 <label className="block text-gray-700 dark:text-gray-300 text-xs font-bold mb-1"
@@ -751,8 +770,7 @@ let utils = (function (window) {
     return {
         compress: function (obj) {
             try {
-                let compressedObj = LZString.compressToEncodedURIComponent(JSON.stringify(obj));
-                return compressedObj;
+                return LZString.compressToEncodedURIComponent(JSON.stringify(obj));
             } catch (e) {
                 console.log("utils.compress did not happen", "\n", e, "\n", obj);
                 return '';
