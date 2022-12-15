@@ -1,0 +1,12 @@
+.facet {
+    @media (hover: hover) {
+        button {
+            visibility: hidden;
+        }
+
+        &:hover button,
+        &:focus-within button {
+            visibility: visible;
+        }
+    }
+}

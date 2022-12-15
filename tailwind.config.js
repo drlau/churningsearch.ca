@@ -1,41 +1,42 @@
-const colors = require('tailwindcss/colors');
+const colors = require("tailwindcss/colors");
+const iOSHeight = require('@rvxlab/tailwind-plugin-ios-full-height');
 
 module.exports = {
-    darkMode: 'media',
-    plugins: [
-        require("@tailwindcss/forms")
+    content: [
+        "./public/**/*.html",
+        "./src/**/*.{js,ts,jsx,tsx}",
+        'node_modules/flowbite-react/**/*.{js,jsx,ts,tsx}'
     ],
-    purge: {
-        enabled: true,
-        content: [
-            './src/*.html',
-            './src/*.tsx',
-            './src/*.jsx',
-            './src/*.vue',
-        ],
-        options: {
-            safelist: [
-                'opacity-50',
-                'cursor-not-allowed',
-                'hover:bg-blue-700'
-            ],
-        },
-    },
     theme: {
         container: {
-            center: true
+            center: true,
+        },
+        screens: {
+            "sm": "576px",
+            "md": "768px",
+            "lg": "992px",
+            "xl": "1280px",
+            "2xl": "1536px"
         },
         colors: {
-            transparent: 'transparent',
-            current: 'currentColor',
+            transparent: "transparent",
+            current: "currentColor",
             black: colors.black,
             white: colors.white,
-            gray: colors.coolGray,
+            slate: colors.slate,
+            gray: colors.gray,
             red: colors.red,
             yellow: colors.yellow,
             blue: colors.sky,
             orange: colors.orange,
-            cyan: colors.cyan
-        }
-    }
-}
+            cyan: colors.cyan,
+            lime: colors.lime
+        },
+    },
+    darkMode: "class",
+    plugins: [
+        require("@tailwindcss/forms"),
+        require('flowbite/plugin'),
+        iOSHeight
+    ],
+};
