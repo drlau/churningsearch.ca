@@ -1,7 +1,7 @@
 export const Config = {
     appId: "churning-canada-search",
     appName: "Churning Canada Search",
-    appAnalyticsId: "UA-221369952-1",
+    appAnalyticsId: "G-R5BDXJTD9X",
     appHosts: [
         "churningsearch.ca"
     ],
